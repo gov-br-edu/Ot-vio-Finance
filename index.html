@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otávio Finance | Cloud Edition</title>
+    <title>Otávio Finance | Dashboard Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-dark: #05070a; }
@@ -42,7 +43,7 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
             <div>
                 <h1 class="text-5xl font-black tracking-tighter text-white">Otávio <span class="text-indigo-400 font-light">Cloud</span></h1>
-                <p class="text-slate-500 mt-2 font-medium">Controle executivo conectado ao banco de dados</p>
+                <p class="text-slate-500 mt-2 font-medium">Controle executivo e análise de dados</p>
             </div>
 
             <div class="glass-card p-3 flex items-center gap-3">
@@ -70,11 +71,11 @@
                 <h3 id="dash-vendas" class="text-3xl font-bold">R$ 0,00</h3>
             </div>
             <div class="glass-card p-8 border-l-4 border-amber-500">
-                <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-2">Valor em Estoque</p>
+                <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-2">Investimento Estoque</p>
                 <h3 id="dash-estoque" class="text-3xl font-bold">R$ 0,00</h3>
             </div>
             <div class="glass-card p-8 border-l-4 border-rose-500">
-                <p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2">Gastos Gerais</p>
+                <p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2">Despesas Gerais</p>
                 <h3 id="dash-gastos" class="text-3xl font-bold">R$ 0,00</h3>
             </div>
         </div>
@@ -100,7 +101,7 @@
 
                 <!-- VENDA -->
                 <div class="glass-card p-8 border-2 border-indigo-500/10">
-                    <h2 class="text-xl font-bold mb-1">Fechar Venda</h2>
+                    <h2 class="text-xl font-bold mb-1 text-emerald-400">Fechar Venda</h2>
                     <p class="text-xs text-slate-500 mb-6 font-medium uppercase tracking-tighter">Selecione itens no estoque ao lado</p>
                     <div id="venda-selecionados" class="space-y-3 mb-6"></div>
                     <form id="vendaForm" class="space-y-4 pt-6 border-t border-white/5">
@@ -109,8 +110,21 @@
                             <span id="venda-custo-total" class="text-xl font-bold text-indigo-400">R$ 0,00</span>
                         </div>
                         <input type="date" id="v-data" class="input-elegant" required>
-                        <input type="number" step="0.01" id="v-valor" placeholder="Preço Final de Venda" class="input-elegant" required>
+                        <input type="number" step="0.01" id="v-valor" placeholder="Preço Final da Venda" class="input-elegant" required>
                         <button type="submit" id="btn-venda" disabled class="btn-elegant w-full !bg-emerald-600 shadow-emerald-500/20">Registrar Venda</button>
+                    </form>
+                </div>
+
+                <!-- DESPESA GERAL -->
+                <div class="glass-card p-8 border-2 border-rose-500/10">
+                    <h2 class="text-xl font-bold mb-6 text-rose-400 flex items-center gap-3">
+                        <span class="w-1.5 h-6 bg-rose-500 rounded-full"></span>Nova Despesa
+                    </h2>
+                    <form id="despesaForm" class="space-y-4">
+                        <input type="text" id="d-desc" placeholder="Descrição (ex: Embalagens)" class="input-elegant" required>
+                        <input type="number" step="0.01" id="d-valor" placeholder="Valor (R$)" class="input-elegant" required>
+                        <input type="date" id="d-data" class="input-elegant" required>
+                        <button type="submit" id="btn-despesa" class="btn-elegant w-full !from-rose-600 !to-rose-500">Salvar Despesa</button>
                     </form>
                 </div>
             </div>
@@ -154,6 +168,28 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- TABELA DESPESAS -->
+                <div class="glass-card overflow-hidden">
+                    <div class="px-8 py-6 border-b border-white/5 bg-white/5 font-bold text-rose-400">📉 Despesas Registradas</div>
+                    <div class="max-h-[250px] overflow-y-auto">
+                        <table class="w-full text-left">
+                            <tbody id="lista-despesas" class="text-sm divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO DE GRÁFICOS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+            <div class="glass-card p-8">
+                <h3 class="text-lg font-bold mb-6 text-center">Performance Financeira</h3>
+                <canvas id="chartFinance" height="250"></canvas>
+            </div>
+            <div class="glass-card p-8">
+                <h3 class="text-lg font-bold mb-6 text-center">Custos vs Lucro</h3>
+                <canvas id="chartPie" height="250"></canvas>
             </div>
         </div>
     </div>
@@ -166,9 +202,9 @@
 
         let estoqueLocal = [];
         let selecionados = [];
+        let chart1, chart2;
         const hoje = new Date().toISOString().split('T')[0];
 
-        // Inicialização de Datas
         document.querySelectorAll('input[type="date"]').forEach(el => el.value = hoje);
         document.getElementById('filtro-ano').value = new Date().getFullYear();
         document.getElementById('filtro-mes').value = String(new Date().getMonth() + 1).padStart(2, '0');
@@ -181,26 +217,26 @@
             const dataInicio = `${ano}-${mes}-01`;
             const dataFim = `${ano}-${mes}-31`;
 
-            // Buscar dados no Supabase
             const { data: estoque } = await _supabase.from('estoque').select('*').eq('vendido', false).order('id', { ascending: false });
             const { data: vendas } = await _supabase.from('vendas').select('*').gte('data', dataInicio).lte('data', dataFim).order('data', { ascending: false });
-            const { data: despesas } = await _supabase.from('despesas').select('*').gte('data', dataInicio).lte('data', dataFim);
+            const { data: despesas } = await _supabase.from('despesas').select('*').gte('data', dataInicio).lte('data', dataFim).order('data', { ascending: false });
 
             estoqueLocal = estoque || [];
             renderizar(estoqueLocal, vendas || [], despesas || []);
+            renderCharts(vendas || [], despesas || []);
             document.getElementById('loading-estoque').classList.add('hidden');
         }
 
         function renderizar(estoque, vendas, despesas) {
             const listEstoque = document.getElementById('lista-estoque');
             const listVendas = document.getElementById('lista-vendas');
+            const listDespesas = document.getElementById('lista-despesas');
             const areaSel = document.getElementById('venda-selecionados');
             
-            listEstoque.innerHTML = ''; listVendas.innerHTML = ''; areaSel.innerHTML = '';
+            listEstoque.innerHTML = ''; listVendas.innerHTML = ''; listDespesas.innerHTML = ''; areaSel.innerHTML = '';
 
             let kpiLucro = 0, kpiVendas = 0, kpiEstoque = 0, kpiGastos = 0;
 
-            // Renderizar Estoque
             estoque.forEach(item => {
                 kpiEstoque += (item.custo + item.deslocamento);
                 const isSel = selecionados.includes(item.id);
@@ -214,39 +250,24 @@
                             </button>
                         </td>
                     </tr>`;
-                
-                if(isSel) {
-                    areaSel.innerHTML += `
-                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <span class="text-[10px] font-black text-white uppercase">${item.descricao}</span>
-                        <span class="text-xs font-bold text-indigo-400">R$ ${(item.custo + item.deslocamento).toFixed(2)}</span>
-                    </div>`;
-                }
+                if(isSel) areaSel.innerHTML += `<div class="flex justify-between bg-white/5 p-4 rounded-2xl border border-white/5"><span class="text-[10px] font-black text-white uppercase">${item.descricao}</span><span class="text-xs font-bold text-indigo-400">R$ ${(item.custo + item.deslocamento).toFixed(2)}</span></div>`;
             });
 
-            // Vendas
             vendas.forEach(v => {
-                kpiVendas += v.valor_venda;
-                kpiLucro += v.lucro;
-                listVendas.innerHTML += `
-                    <tr>
-                        <td class="px-8 py-5 text-slate-500 font-mono text-xs">${v.data.split('-').reverse().join('/')}</td>
-                        <td class="px-8 py-5 text-slate-200 font-medium">${v.itens_desc}</td>
-                        <td class="px-8 py-5 text-right font-bold">R$ ${v.valor_venda.toFixed(2)}</td>
-                        <td class="px-8 py-5 text-right font-bold text-emerald-400">R$ ${v.lucro.toFixed(2)}</td>
-                    </tr>`;
+                kpiVendas += v.valor_venda; kpiLucro += v.lucro;
+                listVendas.innerHTML += `<tr><td class="px-8 py-5 text-slate-500 font-mono text-xs">${v.data.split('-').reverse().join('/')}</td><td class="px-8 py-5 text-slate-200 font-medium">${v.itens_desc}</td><td class="px-8 py-5 text-right font-bold">R$ ${v.valor_venda.toFixed(2)}</td><td class="px-8 py-5 text-right font-bold text-emerald-400">R$ ${v.lucro.toFixed(2)}</td></tr>`;
             });
 
-            // Gastos
-            despesas.forEach(d => kpiGastos += d.valor);
+            despesas.forEach(d => {
+                kpiGastos += d.valor;
+                listDespesas.innerHTML += `<tr><td class="px-8 py-4 text-slate-400">${d.data.split('-').reverse().join('/')}</td><td class="px-8 py-4 text-slate-200">${d.descricao}</td><td class="px-8 py-4 text-right font-bold text-rose-400">R$ ${d.valor.toFixed(2)}</td></tr>`;
+            });
 
-            // Atualizar Dashboard
             document.getElementById('dash-lucro').innerText = `R$ ${(kpiLucro - kpiGastos).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('dash-vendas').innerText = `R$ ${kpiVendas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('dash-estoque').innerText = `R$ ${kpiEstoque.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('dash-gastos').innerText = `R$ ${kpiGastos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             
-            // Custo total da venda selecionada
             let custoVenda = 0;
             selecionados.forEach(id => {
                 const i = estoqueLocal.find(item => item.id === id);
@@ -256,49 +277,77 @@
             document.getElementById('btn-venda').disabled = selecionados.length === 0;
         }
 
+        function renderCharts(vendas, despesas) {
+            const ctx1 = document.getElementById('chartFinance').getContext('2d');
+            const ctx2 = document.getElementById('chartPie').getContext('2d');
+            
+            if(chart1) chart1.destroy();
+            if(chart2) chart2.destroy();
+
+            let totalLucroVendas = vendas.reduce((acc, v) => acc + v.lucro, 0);
+            let totalDespesas = despesas.reduce((acc, d) => acc + d.valor, 0);
+            let totalVendas = vendas.reduce((acc, v) => acc + v.valor_venda, 0);
+
+            chart1 = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Vendas Brutas', 'Despesas Gerais', 'Lucro Líquido'],
+                    datasets: [{
+                        data: [totalVendas, totalDespesas, (totalLucroVendas - totalDespesas)],
+                        backgroundColor: ['#6366f1', '#f43f5e', '#10b981'],
+                        borderRadius: 12
+                    }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { grid: { display: false }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }
+            });
+
+            chart2 = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Custo Peças', 'Despesas', 'Lucro Real'],
+                    datasets: [{
+                        data: [(totalVendas - totalLucroVendas), totalDespesas, (totalLucroVendas - totalDespesas)],
+                        backgroundColor: ['#334155', '#f43f5e', '#10b981'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: { plugins: { legend: { position: 'bottom', labels: { color: '#f1f5f9', padding: 20 } } } }
+            });
+        }
+
         async function toggleSelecao(id) {
             const idx = selecionados.indexOf(id);
             if (idx > -1) selecionados.splice(idx, 1); else selecionados.push(id);
             carregarDados();
         }
 
-        // CADASTRO DE COMPRA
         document.getElementById('compraForm').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-compra');
-            btn.innerText = "Salvando..."; btn.disabled = true;
-
+            const btn = document.getElementById('btn-compra'); btn.innerText = "Salvando...";
             await _supabase.from('estoque').insert([{
                 descricao: document.getElementById('c-desc').value,
                 custo: parseFloat(document.getElementById('c-custo').value),
                 deslocamento: parseFloat(document.getElementById('c-desloc').value),
                 data: document.getElementById('c-data').value
             }]);
-
-            e.target.reset(); document.getElementById('c-data').value = hoje;
-            btn.innerText = "Salvar Compra"; btn.disabled = false;
+            e.target.reset(); document.getElementById('c-data').value = hoje; btn.innerText = "Salvar Compra";
             carregarDados();
         };
 
-        // FINALIZAR VENDA
         document.getElementById('vendaForm').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-venda');
-            btn.innerText = "Processando..."; btn.disabled = true;
-
+            const btn = document.getElementById('btn-venda'); btn.innerText = "Processando...";
             const valorVendaFinal = parseFloat(document.getElementById('v-valor').value);
-            let custoTotalJoias = 0;
-            let nomes = [];
+            let custoTotalJoias = 0; let nomes = [];
 
             for(let id of selecionados) {
                 const item = estoqueLocal.find(i => i.id === id);
                 custoTotalJoias += (item.custo + item.deslocamento);
                 nomes.push(item.descricao);
-                // Marcar como vendido no banco
                 await _supabase.from('estoque').update({ vendido: true }).eq('id', id);
             }
 
-            // Inserir registro da venda
             await _supabase.from('vendas').insert([{
                 data: document.getElementById('v-data').value,
                 itens_desc: nomes.join(" + "),
@@ -306,12 +355,22 @@
                 lucro: valorVendaFinal - custoTotalJoias
             }]);
 
-            selecionados = []; e.target.reset(); document.getElementById('v-data').value = hoje;
-            btn.innerText = "Registrar Venda"; btn.disabled = false;
+            selecionados = []; e.target.reset(); document.getElementById('v-data').value = hoje; btn.innerText = "Registrar Venda";
             carregarDados();
         };
 
-        // ANIMAÇÃO
+        document.getElementById('despesaForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-despesa'); btn.innerText = "Salvando...";
+            await _supabase.from('despesas').insert([{
+                descricao: document.getElementById('d-desc').value,
+                valor: parseFloat(document.getElementById('d-valor').value),
+                data: document.getElementById('d-data').value
+            }]);
+            e.target.reset(); document.getElementById('d-data').value = hoje; btn.innerText = "Salvar Despesa";
+            carregarDados();
+        };
+
         function criarParticulas() {
             const container = document.getElementById('particles');
             const icons = ['💎', '✨', '💍'];
