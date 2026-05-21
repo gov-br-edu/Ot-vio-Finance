@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otávio Finance | Cloud Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-dark: #05070a; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: #f1f5f9; overflow-x: hidden; }
+        
+        .area-animada { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at 30% 20%, #1e1b4b 0%, #05070a 100%); }
+        .diamante { position: absolute; color: rgba(165, 180, 252, 0.1); font-size: 24px; pointer-events: none; animation: flutuar linear infinite; }
+        @keyframes flutuar { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; } }
+
+        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2.5rem; }
+        
+        .input-elegant { 
+            background: rgba(0, 0, 0, 0.4); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            @apply w-full px-6 py-4 rounded-[1.8rem] text-white outline-none transition-all duration-300; 
+        }
+        .input-elegant:focus { @apply border-indigo-500 ring-4 ring-indigo-500/10 bg-black; }
+        
+        .btn-elegant { 
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); 
+            @apply text-white font-bold py-4 rounded-[1.8rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-indigo-500/20 disabled:opacity-20; 
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+    </style>
+</head>
+<body class="antialiased min-h-screen pb-20">
+
+    <div class="area-animada" id="particles"></div>
+
+    <div class="max-w-7xl mx-auto px-6 py-10 relative">
+        <!-- HEADER -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+            <div>
+                <h1 class="text-5xl font-black tracking-tighter text-white">Otávio <span class="text-indigo-400 font-light">Cloud</span></h1>
+                <p class="text-slate-500 mt-2 font-medium">Controle executivo conectado ao banco de dados</p>
+            </div>
+
+            <div class="glass-card p-3 flex items-center gap-3">
+                <select id="filtro-mes" onchange="carregarDados()" class="bg-transparent text-white px-4 py-2 outline-none font-bold">
+                    <option class="text-black" value="01">Janeiro</option><option class="text-black" value="02">Fevereiro</option>
+                    <option class="text-black" value="03">Março</option><option class="text-black" value="04">Abril</option>
+                    <option class="text-black" value="05">Maio</option><option class="text-black" value="06">Junho</option>
+                    <option class="text-black" value="07">Julho</option><option class="text-black" value="08">Agosto</option>
+                    <option class="text-black" value="09">Setembro</option><option class="text-black" value="10">Outubro</option>
+                    <option class="text-black" value="11">Novembro</option><option class="text-black" value="12">Dezembro</option>
+                </select>
+                <div class="h-6 w-px bg-white/10"></div>
+                <input type="number" id="filtro-ano" onchange="carregarDados()" value="2024" class="bg-transparent text-white px-4 py-2 w-24 outline-none font-bold">
+            </div>
+        </header>
+
+        <!-- KPI CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="glass-card p-8 border-l-4 border-indigo-500 shadow-2xl">
+                <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">Lucro Líquido</p>
+                <h3 id="dash-lucro" class="text-3xl font-bold">R$ 0,00</h3>
+            </div>
+            <div class="glass-card p-8 border-l-4 border-emerald-500">
+                <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">Vendas Brutas</p>
+                <h3 id="dash-vendas" class="text-3xl font-bold">R$ 0,00</h3>
+            </div>
+            <div class="glass-card p-8 border-l-4 border-amber-500">
+                <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-2">Valor em Estoque</p>
+                <h3 id="dash-estoque" class="text-3xl font-bold">R$ 0,00</h3>
+            </div>
+            <div class="glass-card p-8 border-l-4 border-rose-500">
+                <p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2">Gastos Gerais</p>
+                <h3 id="dash-gastos" class="text-3xl font-bold">R$ 0,00</h3>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- COLUNA ESQUERDA: INPUTS -->
+            <div class="lg:col-span-4 space-y-8">
+                <!-- COMPRA -->
+                <div class="glass-card p-8 shadow-2xl">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
+                        <span class="w-1.5 h-6 bg-indigo-500 rounded-full"></span>Nova Compra
+                    </h2>
+                    <form id="compraForm" class="space-y-4">
+                        <input type="text" id="c-desc" placeholder="Descrição da Jóia" class="input-elegant" required>
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="number" step="0.01" id="c-custo" placeholder="Custo" class="input-elegant" required>
+                            <input type="number" step="0.01" id="c-desloc" placeholder="Desloc" class="input-elegant" required>
+                        </div>
+                        <input type="date" id="c-data" class="input-elegant" required>
+                        <button type="submit" id="btn-compra" class="btn-elegant w-full">Salvar Compra</button>
+                    </form>
+                </div>
+
+                <!-- VENDA -->
+                <div class="glass-card p-8 border-2 border-indigo-500/10">
+                    <h2 class="text-xl font-bold mb-1">Fechar Venda</h2>
+                    <p class="text-xs text-slate-500 mb-6 font-medium uppercase tracking-tighter">Selecione itens no estoque ao lado</p>
+                    <div id="venda-selecionados" class="space-y-3 mb-6"></div>
+                    <form id="vendaForm" class="space-y-4 pt-6 border-t border-white/5">
+                        <div class="flex justify-between items-center px-2">
+                            <span class="text-xs font-bold text-slate-400">CUSTO TOTAL:</span>
+                            <span id="venda-custo-total" class="text-xl font-bold text-indigo-400">R$ 0,00</span>
+                        </div>
+                        <input type="date" id="v-data" class="input-elegant" required>
+                        <input type="number" step="0.01" id="v-valor" placeholder="Preço Final de Venda" class="input-elegant" required>
+                        <button type="submit" id="btn-venda" disabled class="btn-elegant w-full !bg-emerald-600 shadow-emerald-500/20">Registrar Venda</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA: TABELAS -->
+            <div class="lg:col-span-8 space-y-8">
+                <!-- TABELA ESTOQUE -->
+                <div class="glass-card overflow-hidden">
+                    <div class="px-8 py-6 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                        <h2 class="font-bold tracking-tight">💎 Estoque Disponível</h2>
+                        <div id="loading-estoque" class="text-[10px] text-indigo-400 animate-pulse hidden uppercase">Sincronizando...</div>
+                    </div>
+                    <div class="max-h-[350px] overflow-y-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-[10px] text-slate-500 uppercase tracking-widest bg-black/20">
+                                <tr>
+                                    <th class="px-8 py-3">Descrição</th>
+                                    <th class="px-8 py-3">Custo Total</th>
+                                    <th class="px-8 py-3 text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-estoque" class="text-sm divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABELA VENDAS -->
+                <div class="glass-card overflow-hidden">
+                    <div class="px-8 py-6 border-b border-white/5 bg-white/5 font-bold">✅ Vendas no Período</div>
+                    <div class="max-h-[350px] overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="text-[10px] text-slate-500 uppercase tracking-widest bg-black/20">
+                                <tr>
+                                    <th class="px-8 py-3">Data</th>
+                                    <th class="px-8 py-3">Peças</th>
+                                    <th class="px-8 py-3 text-right">Venda</th>
+                                    <th class="px-8 py-3 text-right">Lucro</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-vendas" class="text-sm divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO SUPABASE
+        const SB_URL = "https://ufadejgqyyziimcootee.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmYWRlamdxeXl6aWltY29vdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjcwMjMsImV4cCI6MjA5NDkwMzAyM30.AP8NQBqnYQ8vEtT3ypOms3oLPVsFWahRBr-Bg0zEy5M";
+        const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+        let estoqueLocal = [];
+        let selecionados = [];
+        const hoje = new Date().toISOString().split('T')[0];
+
+        // Inicialização de Datas
+        document.querySelectorAll('input[type="date"]').forEach(el => el.value = hoje);
+        document.getElementById('filtro-ano').value = new Date().getFullYear();
+        document.getElementById('filtro-mes').value = String(new Date().getMonth() + 1).padStart(2, '0');
+
+        async function carregarDados() {
+            document.getElementById('loading-estoque').classList.remove('hidden');
+            
+            const mes = document.getElementById('filtro-mes').value;
+            const ano = document.getElementById('filtro-ano').value;
+            const dataInicio = `${ano}-${mes}-01`;
+            const dataFim = `${ano}-${mes}-31`;
+
+            // Buscar dados no Supabase
+            const { data: estoque } = await _supabase.from('estoque').select('*').eq('vendido', false).order('id', { ascending: false });
+            const { data: vendas } = await _supabase.from('vendas').select('*').gte('data', dataInicio).lte('data', dataFim).order('data', { ascending: false });
+            const { data: despesas } = await _supabase.from('despesas').select('*').gte('data', dataInicio).lte('data', dataFim);
+
+            estoqueLocal = estoque || [];
+            renderizar(estoqueLocal, vendas || [], despesas || []);
+            document.getElementById('loading-estoque').classList.add('hidden');
+        }
+
+        function renderizar(estoque, vendas, despesas) {
+            const listEstoque = document.getElementById('lista-estoque');
+            const listVendas = document.getElementById('lista-vendas');
+            const areaSel = document.getElementById('venda-selecionados');
+            
+            listEstoque.innerHTML = ''; listVendas.innerHTML = ''; areaSel.innerHTML = '';
+
+            let kpiLucro = 0, kpiVendas = 0, kpiEstoque = 0, kpiGastos = 0;
+
+            // Renderizar Estoque
+            estoque.forEach(item => {
+                kpiEstoque += (item.custo + item.deslocamento);
+                const isSel = selecionados.includes(item.id);
+                listEstoque.innerHTML += `
+                    <tr class="${isSel ? 'bg-indigo-500/10' : ''}">
+                        <td class="px-8 py-4 font-bold text-slate-200">${item.descricao}</td>
+                        <td class="px-8 py-4 font-bold text-indigo-400">R$ ${(item.custo + item.deslocamento).toFixed(2)}</td>
+                        <td class="px-8 py-4 text-center">
+                            <button onclick="toggleSelecao(${item.id})" class="px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${isSel ? 'bg-indigo-600 text-white' : 'bg-white/5 text-indigo-400 hover:bg-white/10'}">
+                                ${isSel ? 'Remover' : 'Selecionar'}
+                            </button>
+                        </td>
+                    </tr>`;
+                
+                if(isSel) {
+                    areaSel.innerHTML += `
+                    <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <span class="text-[10px] font-black text-white uppercase">${item.descricao}</span>
+                        <span class="text-xs font-bold text-indigo-400">R$ ${(item.custo + item.deslocamento).toFixed(2)}</span>
+                    </div>`;
+                }
+            });
+
+            // Vendas
+            vendas.forEach(v => {
+                kpiVendas += v.valor_venda;
+                kpiLucro += v.lucro;
+                listVendas.innerHTML += `
+                    <tr>
+                        <td class="px-8 py-5 text-slate-500 font-mono text-xs">${v.data.split('-').reverse().join('/')}</td>
+                        <td class="px-8 py-5 text-slate-200 font-medium">${v.itens_desc}</td>
+                        <td class="px-8 py-5 text-right font-bold">R$ ${v.valor_venda.toFixed(2)}</td>
+                        <td class="px-8 py-5 text-right font-bold text-emerald-400">R$ ${v.lucro.toFixed(2)}</td>
+                    </tr>`;
+            });
+
+            // Gastos
+            despesas.forEach(d => kpiGastos += d.valor);
+
+            // Atualizar Dashboard
+            document.getElementById('dash-lucro').innerText = `R$ ${(kpiLucro - kpiGastos).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('dash-vendas').innerText = `R$ ${kpiVendas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('dash-estoque').innerText = `R$ ${kpiEstoque.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('dash-gastos').innerText = `R$ ${kpiGastos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            
+            // Custo total da venda selecionada
+            let custoVenda = 0;
+            selecionados.forEach(id => {
+                const i = estoqueLocal.find(item => item.id === id);
+                if(i) custoVenda += (i.custo + i.deslocamento);
+            });
+            document.getElementById('venda-custo-total').innerText = `R$ ${custoVenda.toFixed(2)}`;
+            document.getElementById('btn-venda').disabled = selecionados.length === 0;
+        }
+
+        async function toggleSelecao(id) {
+            const idx = selecionados.indexOf(id);
+            if (idx > -1) selecionados.splice(idx, 1); else selecionados.push(id);
+            carregarDados();
+        }
+
+        // CADASTRO DE COMPRA
+        document.getElementById('compraForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-compra');
+            btn.innerText = "Salvando..."; btn.disabled = true;
+
+            await _supabase.from('estoque').insert([{
+                descricao: document.getElementById('c-desc').value,
+                custo: parseFloat(document.getElementById('c-custo').value),
+                deslocamento: parseFloat(document.getElementById('c-desloc').value),
+                data: document.getElementById('c-data').value
+            }]);
+
+            e.target.reset(); document.getElementById('c-data').value = hoje;
+            btn.innerText = "Salvar Compra"; btn.disabled = false;
+            carregarDados();
+        };
+
+        // FINALIZAR VENDA
+        document.getElementById('vendaForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-venda');
+            btn.innerText = "Processando..."; btn.disabled = true;
+
+            const valorVendaFinal = parseFloat(document.getElementById('v-valor').value);
+            let custoTotalJoias = 0;
+            let nomes = [];
+
+            for(let id of selecionados) {
+                const item = estoqueLocal.find(i => i.id === id);
+                custoTotalJoias += (item.custo + item.deslocamento);
+                nomes.push(item.descricao);
+                // Marcar como vendido no banco
+                await _supabase.from('estoque').update({ vendido: true }).eq('id', id);
+            }
+
+            // Inserir registro da venda
+            await _supabase.from('vendas').insert([{
+                data: document.getElementById('v-data').value,
+                itens_desc: nomes.join(" + "),
+                valor_venda: valorVendaFinal,
+                lucro: valorVendaFinal - custoTotalJoias
+            }]);
+
+            selecionados = []; e.target.reset(); document.getElementById('v-data').value = hoje;
+            btn.innerText = "Registrar Venda"; btn.disabled = false;
+            carregarDados();
+        };
+
+        // ANIMAÇÃO
+        function criarParticulas() {
+            const container = document.getElementById('particles');
+            const icons = ['💎', '✨', '💍'];
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'diamante'; p.innerText = icons[Math.floor(Math.random() * icons.length)];
+                p.style.left = Math.random() * 100 + 'vw';
+                p.style.animationDuration = (Math.random() * 10 + 12) + 's';
+                p.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(p);
+            }
+        }
+
+        criarParticulas();
+        carregarDados();
+    </script>
+</body>
+</html>
