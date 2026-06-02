@@ -222,18 +222,42 @@
         async function carregarDados() {
             const mes = document.getElementById('filtro-mes').value;
             const ano = document.getElementById('filtro-ano').value;
+            
+            // CORREÇÃO: Calcular dinamicamente o último dia do mês selecionado
+            // Isso resolve o problema de meses com 30 dias (como Junho) ou 28 dias.
+            const ultimoDia = new Date(ano, mes, 0).getDate(); 
+            
             const dataInicio = `${ano}-${mes}-01`;
-            const dataFim = `${ano}-${mes}-31`;
-
-            const { data: estoque } = await _supabase.from('estoque').select('*').eq('vendido', false).order('id', { ascending: false });
-            const { data: vendas } = await _supabase.from('vendas').select('*').gte('data', dataInicio).lte('data', dataFim).order('data', { ascending: false });
-            const { data: despesas } = await _supabase.from('despesas').select('*').gte('data', dataInicio).lte('data', dataFim);
-
+            const dataFim = `${ano}-${mes}-${ultimoDia}`;
+        
+            // Buscar Estoque (Sempre traz o que não foi vendido, indp. da data)
+            const { data: estoque } = await _supabase
+                .from('estoque')
+                .select('*')
+                .eq('vendido', false)
+                .order('id', { ascending: false });
+        
+            // Buscar Vendas do período
+            const { data: vendas } = await _supabase
+                .from('vendas')
+                .select('*')
+                .gte('data', dataInicio)
+                .lte('data', dataFim)
+                .order('data', { ascending: false });
+        
+            // Buscar Despesas do período
+            const { data: despesas } = await _supabase
+                .from('despesas')
+                .select('*')
+                .gte('data', dataInicio)
+                .lte('data', dataFim)
+                .order('data', { ascending: false });
+        
             estoqueLocal = estoque || [];
             renderizar(estoqueLocal, vendas || [], despesas || []);
             renderCharts(vendas || [], despesas || []);
         }
-
+        
         function renderizar(estoque, vendas, despesas) {
             const listEstoque = document.getElementById('lista-estoque');
             const listVendas = document.getElementById('lista-vendas');
