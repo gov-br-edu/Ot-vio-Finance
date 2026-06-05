@@ -11,25 +11,14 @@
     <style>
         :root { --bg-dark: #05070a; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: #f1f5f9; overflow-x: hidden; }
-        
         .area-animada { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at 30% 20%, #1e1b4b 0%, #05070a 100%); }
         .diamante { position: absolute; color: rgba(165, 180, 252, 0.1); font-size: 24px; pointer-events: none; animation: flutuar linear infinite; }
         @keyframes flutuar { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; } }
-
         .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2.5rem; }
-        
-        .input-elegant { 
-            background: rgba(0, 0, 0, 0.4); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            @apply w-full px-6 py-4 rounded-[1.8rem] text-white outline-none transition-all duration-300; 
-        }
+        .input-elegant { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); @apply w-full px-6 py-4 rounded-[1.8rem] text-white outline-none transition-all duration-300; }
         .input-elegant:focus { @apply border-indigo-500 ring-4 ring-indigo-500/10 bg-black; }
-        
-        .btn-elegant { 
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); 
-            @apply text-white font-bold py-4 rounded-[1.8rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-indigo-500/20 disabled:opacity-20; 
-        }
-
+        .btn-elegant { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); @apply text-white font-bold py-4 rounded-[1.8rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-indigo-500/20 disabled:opacity-20; }
+        .btn-delete { @apply text-rose-500 hover:text-rose-300 transition-colors p-2; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
@@ -40,11 +29,11 @@
 
     <!-- TELA DE LOGIN -->
     <div id="login-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-[#05070a]">
-        <div class="glass-card p-10 w-full max-w-md text-center mx-4">
+        <div class="glass-card p-10 w-full max-w-md text-center mx-4 border-indigo-500/20 border-2">
             <h2 class="text-3xl font-black mb-6 italic tracking-tighter text-white uppercase">Acesso <span class="text-indigo-400">Privado</span></h2>
             <input type="password" id="input-senha" placeholder="Digite a senha" class="input-elegant text-center mb-4">
             <button onclick="validarSenha()" class="btn-elegant w-full">Desbloquear Sistema</button>
-            <p id="login-erro" class="text-rose-500 text-xs mt-4 hidden">Senha incorreta. Tente novamente.</p>
+            <p id="login-erro" class="text-rose-500 text-xs mt-4 hidden">Senha incorreta.</p>
         </div>
     </div>
 
@@ -54,49 +43,31 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
             <div>
                 <h1 class="text-5xl font-black tracking-tighter text-white">Otávio <span class="text-indigo-400 font-light">Finance</span></h1>
-                <p class="text-slate-500 mt-2 font-medium">Controle executivo e análise de dados</p>
+                <p class="text-slate-500 mt-2 font-medium">Controle de Joias & Análise em Nuvem</p>
             </div>
 
             <div class="glass-card p-3 flex items-center gap-3">
                 <select id="filtro-mes" onchange="carregarDados()" class="bg-transparent text-white px-4 py-2 outline-none font-bold">
-                    <option class="text-black" value="01">Janeiro</option><option class="text-black" value="02">Fevereiro</option>
-                    <option class="text-black" value="03">Março</option><option class="text-black" value="04">Abril</option>
-                    <option class="text-black" value="05">Maio</option><option class="text-black" value="06">Junho</option>
-                    <option class="text-black" value="07">Julho</option><option class="text-black" value="08">Agosto</option>
-                    <option class="text-black" value="09">Setembro</option><option class="text-black" value="10">Outubro</option>
-                    <option class="text-black" value="11">Novembro</option><option class="text-black" value="12">Dezembro</option>
+                    <option class="text-black" value="01">Janeiro</option><option class="text-black" value="02">Fevereiro</option><option class="text-black" value="03">Março</option><option class="text-black" value="04">Abril</option><option class="text-black" value="05">Maio</option><option class="text-black" value="06">Junho</option><option class="text-black" value="07">Julho</option><option class="text-black" value="08">Agosto</option><option class="text-black" value="09">Setembro</option><option class="text-black" value="10">Outubro</option><option class="text-black" value="11">Novembro</option><option class="text-black" value="12">Dezembro</option>
                 </select>
-                <div class="h-6 w-px bg-white/10"></div>
                 <input type="number" id="filtro-ano" onchange="carregarDados()" value="2024" class="bg-transparent text-white px-4 py-2 w-24 outline-none font-bold">
             </div>
         </header>
 
         <!-- KPI CARDS -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            <div class="glass-card p-8 border-l-4 border-indigo-500 shadow-2xl">
-                <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2 text-white">Lucro Líquido</p>
-                <h3 id="dash-lucro" class="text-3xl font-bold">R$ 0,00</h3>
-            </div>
-            <div class="glass-card p-8 border-l-4 border-emerald-500">
-                <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2 text-white">Vendas Brutas</p>
-                <h3 id="dash-vendas" class="text-3xl font-bold">R$ 0,00</h3>
-            </div>
-            <div class="glass-card p-8 border-l-4 border-amber-500">
-                <p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-2 text-white">Inv. Estoque</p>
-                <h3 id="dash-estoque" class="text-3xl font-bold">R$ 0,00</h3>
-            </div>
-            <div class="glass-card p-8 border-l-4 border-rose-500">
-                <p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2 text-white">Despesas Gerais</p>
-                <h3 id="dash-gastos" class="text-3xl font-bold">R$ 0,00</h3>
-            </div>
+            <div class="glass-card p-8 border-l-4 border-indigo-500"><p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">Lucro Líquido</p><h3 id="dash-lucro" class="text-3xl font-bold">R$ 0,00</h3></div>
+            <div class="glass-card p-8 border-l-4 border-emerald-500"><p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-2">Vendas Brutas</p><h3 id="dash-vendas" class="text-3xl font-bold">R$ 0,00</h3></div>
+            <div class="glass-card p-8 border-l-4 border-amber-500"><p class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-2 text-white">Inv. Estoque</p><h3 id="dash-estoque" class="text-3xl font-bold">R$ 0,00</h3></div>
+            <div class="glass-card p-8 border-l-4 border-rose-500"><p class="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-2 text-white">Despesas Gerais</p><h3 id="dash-gastos" class="text-3xl font-bold">R$ 0,00</h3></div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- COLUNA ESQUERDA: INPUTS -->
             <div class="lg:col-span-4 space-y-8">
+                <!-- COMPRA -->
                 <div class="glass-card p-8 shadow-2xl">
-                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3">
-                        <span class="w-1.5 h-6 bg-indigo-500 rounded-full"></span>Nova Compra
-                    </h2>
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-3"><span class="w-1.5 h-6 bg-indigo-500 rounded-full"></span>Nova Compra</h2>
                     <form id="compraForm" class="space-y-4">
                         <input type="text" id="c-desc" placeholder="Descrição da Jóia" class="input-elegant" required>
                         <div class="grid grid-cols-2 gap-4">
@@ -108,26 +79,23 @@
                     </form>
                 </div>
 
+                <!-- VENDA -->
                 <div class="glass-card p-8 border-2 border-indigo-500/10">
-                    <h2 class="text-xl font-bold mb-1 text-emerald-400">Fechar Venda</h2>
+                    <h2 class="text-xl font-bold mb-1 text-emerald-400 uppercase italic">Fechar Venda</h2>
                     <div id="venda-selecionados" class="space-y-3 my-4"></div>
                     <form id="vendaForm" class="space-y-4 pt-6 border-t border-white/5">
-                        <div class="flex justify-between items-center px-2">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Custo Total:</span>
-                            <span id="venda-custo-total" class="text-xl font-bold text-indigo-400">R$ 0,00</span>
-                        </div>
+                        <div class="flex justify-between items-center px-2"><span class="text-xs font-bold text-slate-400">CUSTO TOTAL:</span><span id="venda-custo-total" class="text-xl font-bold text-indigo-400 font-mono">R$ 0,00</span></div>
                         <input type="date" id="v-data" class="input-elegant" required>
-                        <input type="number" step="0.01" id="v-valor" placeholder="Valor Final de Venda" class="input-elegant" required>
+                        <input type="number" step="0.01" id="v-valor" placeholder="Valor Final da Venda" class="input-elegant" required>
                         <button type="submit" id="btn-venda" disabled class="btn-elegant w-full !bg-emerald-600">Registrar Venda</button>
                     </form>
                 </div>
 
+                <!-- DESPESA GERAL -->
                 <div class="glass-card p-8 border-2 border-rose-500/10 text-white">
-                    <h2 class="text-xl font-bold mb-6 text-rose-400 flex items-center gap-3 italic uppercase">
-                        <span class="w-1.5 h-6 bg-rose-500 rounded-full"></span>Nova Despesa
-                    </h2>
+                    <h2 class="text-xl font-bold mb-6 text-rose-400 flex items-center gap-3 uppercase"><span class="w-1.5 h-6 bg-rose-500 rounded-full"></span>Nova Despesa</h2>
                     <form id="despesaForm" class="space-y-4">
-                        <input type="text" id="d-desc" placeholder="Descrição (Ex: Embalagem)" class="input-elegant" required>
+                        <input type="text" id="d-desc" placeholder="Descrição" class="input-elegant" required>
                         <input type="number" step="0.01" id="d-valor" placeholder="Valor (R$)" class="input-elegant" required>
                         <input type="date" id="d-data" class="input-elegant" required>
                         <button type="submit" id="btn-despesa" class="btn-elegant w-full !from-rose-600 !to-rose-500">Salvar Gasto</button>
@@ -135,9 +103,11 @@
                 </div>
             </div>
 
+            <!-- COLUNA DIREITA: TABELAS -->
             <div class="lg:col-span-8 space-y-8">
+                <!-- TABELA ESTOQUE -->
                 <div class="glass-card overflow-hidden text-white">
-                    <div class="px-8 py-6 border-b border-white/5 bg-white/5 flex justify-between items-center font-bold tracking-widest">💎 ESTOQUE EM ABERTO</div>
+                    <div class="px-8 py-6 border-b border-white/5 bg-white/5 flex justify-between items-center font-bold tracking-widest uppercase">💎 Estoque Disponível</div>
                     <div class="max-h-80 overflow-y-auto">
                         <table class="w-full text-left">
                             <tbody id="lista-estoque" class="text-sm divide-y divide-white/5"></tbody>
@@ -145,18 +115,20 @@
                     </div>
                 </div>
 
+                <!-- TABELA VENDAS -->
                 <div class="glass-card overflow-hidden text-white">
-                    <div class="px-8 py-6 border-b border-white/5 bg-white/5 font-bold tracking-widest">✅ VENDAS NO PERÍODO</div>
+                    <div class="px-8 py-6 border-b border-white/5 bg-white/5 font-bold tracking-widest uppercase">✅ Vendas do Período</div>
                     <div class="max-h-80 overflow-y-auto">
                         <table class="w-full text-left border-collapse">
                             <thead class="text-[10px] text-slate-500 uppercase tracking-widest bg-black/20">
-                                <tr><th class="px-8 py-3">Data</th><th class="px-8 py-3">Peças</th><th class="px-8 py-3 text-right">Venda</th><th class="px-8 py-3 text-right">Lucro</th></tr>
+                                <tr><th class="px-8 py-3">Data</th><th class="px-8 py-3 text-center">Ações</th><th class="px-8 py-3">Peças</th><th class="px-8 py-3 text-right">Venda</th><th class="px-8 py-3 text-right">Lucro</th></tr>
                             </thead>
                             <tbody id="lista-vendas" class="text-sm divide-y divide-white/5"></tbody>
                         </table>
                     </div>
                 </div>
 
+                <!-- TABELA DESPESAS -->
                 <div class="glass-card overflow-hidden text-white">
                     <div class="px-8 py-6 border-b border-white/5 bg-white/5 font-bold tracking-widest text-rose-400 uppercase">📉 Despesas Gerais</div>
                     <div class="max-h-64 overflow-y-auto">
@@ -168,20 +140,15 @@
             </div>
         </div>
 
+        <!-- GRÁFICOS -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 text-white">
-            <div class="glass-card p-8">
-                <h3 class="text-lg font-bold mb-6 text-center uppercase tracking-widest text-indigo-400">Performance Financeira</h3>
-                <canvas id="chartFinance" height="250"></canvas>
-            </div>
-            <div class="glass-card p-8">
-                <h3 class="text-lg font-bold mb-6 text-center uppercase tracking-widest text-indigo-400">Estrutura de Lucro</h3>
-                <canvas id="chartPie" height="250"></canvas>
-            </div>
+            <div class="glass-card p-8"><h3 class="text-lg font-bold mb-6 text-center uppercase tracking-widest text-indigo-400">Fluxo de Caixa</h3><canvas id="chartFinance" height="250"></canvas></div>
+            <div class="glass-card p-8"><h3 class="text-lg font-bold mb-6 text-center uppercase tracking-widest text-indigo-400">Estrutura de Lucro</h3><canvas id="chartPie" height="250"></canvas></div>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÕES
+        // CONFIGURAÇÕES SUPABASE (SUAS CREDENCIAIS)
         const SB_URL = "https://ufadejgqyyziimcootee.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmYWRlamdxeXl6aWltY29vdGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjcwMjMsImV4cCI6MjA5NDkwMzAyM30.AP8NQBqnYQ8vEtT3ypOms3oLPVsFWahRBr-Bg0zEy5M";
         const SENHA_MESTRA = "1903";
@@ -194,15 +161,12 @@
 
         // --- SISTEMA DE LOGIN ---
         function validarSenha() {
-            const senha = document.getElementById('input-senha').value;
-            if(senha === SENHA_MESTRA) {
+            if(document.getElementById('input-senha').value === SENHA_MESTRA) {
                 localStorage.setItem('acesso_otavio', 'true');
                 document.getElementById('login-overlay').classList.add('hidden');
                 document.getElementById('conteudo-site').classList.remove('hidden');
                 carregarDados();
-            } else {
-                document.getElementById('login-erro').classList.remove('hidden');
-            }
+            } else document.getElementById('login-erro').classList.remove('hidden');
         }
 
         window.onload = () => {
@@ -222,42 +186,19 @@
         async function carregarDados() {
             const mes = document.getElementById('filtro-mes').value;
             const ano = document.getElementById('filtro-ano').value;
-            
-            // CORREÇÃO: Calcular dinamicamente o último dia do mês selecionado
-            // Isso resolve o problema de meses com 30 dias (como Junho) ou 28 dias.
-            const ultimoDia = new Date(ano, mes, 0).getDate(); 
-            
+            const ultimoDia = new Date(ano, mes, 0).getDate();
             const dataInicio = `${ano}-${mes}-01`;
             const dataFim = `${ano}-${mes}-${ultimoDia}`;
-        
-            // Buscar Estoque (Sempre traz o que não foi vendido, indp. da data)
-            const { data: estoque } = await _supabase
-                .from('estoque')
-                .select('*')
-                .eq('vendido', false)
-                .order('id', { ascending: false });
-        
-            // Buscar Vendas do período
-            const { data: vendas } = await _supabase
-                .from('vendas')
-                .select('*')
-                .gte('data', dataInicio)
-                .lte('data', dataFim)
-                .order('data', { ascending: false });
-        
-            // Buscar Despesas do período
-            const { data: despesas } = await _supabase
-                .from('despesas')
-                .select('*')
-                .gte('data', dataInicio)
-                .lte('data', dataFim)
-                .order('data', { ascending: false });
-        
+
+            const { data: estoque } = await _supabase.from('estoque').select('*').eq('vendido', false).order('id', { ascending: false });
+            const { data: vendas } = await _supabase.from('vendas').select('*').gte('data', dataInicio).lte('data', dataFim).order('data', { ascending: false });
+            const { data: despesas } = await _supabase.from('despesas').select('*').gte('data', dataInicio).lte('data', dataFim).order('data', { ascending: false });
+
             estoqueLocal = estoque || [];
             renderizar(estoqueLocal, vendas || [], despesas || []);
             renderCharts(vendas || [], despesas || []);
         }
-        
+
         function renderizar(estoque, vendas, despesas) {
             const listEstoque = document.getElementById('lista-estoque');
             const listVendas = document.getElementById('lista-vendas');
@@ -267,30 +208,34 @@
             listEstoque.innerHTML = ''; listVendas.innerHTML = ''; listDespesas.innerHTML = ''; areaSel.innerHTML = '';
             let kpiLucro = 0, kpiVendas = 0, kpiEstoque = 0, kpiGastos = 0;
 
+            // Estoque
             estoque.forEach(item => {
                 kpiEstoque += (item.custo + item.deslocamento);
                 const isSel = selecionados.includes(item.id);
                 listEstoque.innerHTML += `
                     <tr class="${isSel ? 'bg-indigo-500/10' : ''}">
-                        <td class="px-8 py-4 font-bold text-slate-200">${item.descricao}</td>
-                        <td class="px-8 py-4 font-bold text-indigo-400">R$ ${(item.custo + item.deslocamento).toFixed(2)}</td>
+                        <td class="px-8 py-4"><button onclick="deletarRegistro('estoque', ${item.id})" class="btn-delete">🗑️</button></td>
+                        <td class="px-4 py-4 font-bold text-slate-200">${item.descricao}</td>
+                        <td class="px-8 py-4 font-bold text-indigo-400 text-right">R$ ${(item.custo + item.deslocamento).toFixed(2)}</td>
                         <td class="px-8 py-4 text-center">
                             <button onclick="toggleSelecao(${item.id})" class="px-4 py-2 rounded-2xl text-[10px] font-black uppercase transition-all ${isSel ? 'bg-indigo-600 text-white' : 'bg-white/5 text-indigo-400'}">
                                 ${isSel ? 'Remover' : 'Selecionar'}
                             </button>
                         </td>
                     </tr>`;
-                if(isSel) areaSel.innerHTML += `<div class="flex justify-between bg-white/5 p-4 rounded-2xl border border-white/5 text-xs text-indigo-400 uppercase font-bold"><span>${item.descricao}</span><span>R$ ${(item.custo + item.deslocamento).toFixed(2)}</span></div>`;
+                if(isSel) areaSel.innerHTML += `<div class="flex justify-between bg-white/5 p-4 rounded-2xl border border-white/5 text-xs text-indigo-400 font-bold"><span>${item.descricao}</span><span>R$ ${(item.custo + item.deslocamento).toFixed(2)}</span></div>`;
             });
 
+            // Vendas
             vendas.forEach(v => {
                 kpiVendas += v.valor_venda; kpiLucro += v.lucro;
-                listVendas.innerHTML += `<tr><td class="px-8 py-5 text-slate-500 font-mono text-xs">${v.data.split('-').reverse().join('/')}</td><td class="px-8 py-5 text-slate-200 font-medium">${v.itens_desc}</td><td class="px-8 py-5 text-right font-bold">R$ ${v.valor_venda.toFixed(2)}</td><td class="px-8 py-5 text-right font-bold text-emerald-400">R$ ${v.lucro.toFixed(2)}</td></tr>`;
+                listVendas.innerHTML += `<tr><td class="px-8 py-5 text-slate-500 font-mono text-xs">${v.data.split('-').reverse().join('/')}</td><td class="px-2 text-center"><button onclick="deletarRegistro('vendas', ${v.id})" class="btn-delete">🗑️</button></td><td class="px-8 py-5 text-slate-200 font-medium">${v.itens_desc}</td><td class="px-8 py-5 text-right font-bold">R$ ${v.valor_venda.toFixed(2)}</td><td class="px-8 py-5 text-right font-bold text-emerald-400">R$ ${v.lucro.toFixed(2)}</td></tr>`;
             });
 
+            // Despesas
             despesas.forEach(d => {
                 kpiGastos += d.valor;
-                listDespesas.innerHTML += `<tr><td class="px-8 py-4 text-slate-400 font-mono text-xs">${d.data.split('-').reverse().join('/')}</td><td class="px-8 py-4 text-slate-200 font-medium italic">${d.descricao}</td><td class="px-8 py-4 text-right font-bold text-rose-400">- R$ ${d.valor.toFixed(2)}</td></tr>`;
+                listDespesas.innerHTML += `<tr><td class="px-8 py-4"><button onclick="deletarRegistro('despesas', ${d.id})" class="btn-delete">🗑️</button></td><td class="px-4 py-4 text-slate-400 font-mono text-xs">${d.data.split('-').reverse().join('/')}</td><td class="px-8 py-4 text-slate-200 font-medium italic">${d.descricao}</td><td class="px-8 py-4 text-right font-bold text-rose-400">- R$ ${d.valor.toFixed(2)}</td></tr>`;
             });
 
             document.getElementById('dash-lucro').innerText = `R$ ${(kpiLucro - kpiGastos).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
@@ -298,13 +243,18 @@
             document.getElementById('dash-estoque').innerText = `R$ ${kpiEstoque.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('dash-gastos').innerText = `R$ ${kpiGastos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             
-            let custoVenda = 0;
-            selecionados.forEach(id => {
-                const i = estoqueLocal.find(item => item.id === id);
-                if(i) custoVenda += (i.custo + i.deslocamento);
-            });
+            let custoVenda = 0; selecionados.forEach(id => { const i = estoqueLocal.find(item => item.id === id); if(i) custoVenda += (i.custo + i.deslocamento); });
             document.getElementById('venda-custo-total').innerText = `R$ ${custoVenda.toFixed(2)}`;
             document.getElementById('btn-venda').disabled = selecionados.length === 0;
+        }
+
+        // --- FUNÇÃO DE EXCLUSÃO ---
+        async function deletarRegistro(tabela, id) {
+            if(confirm("Deseja realmente apagar este registro permanentemente?")) {
+                const { error } = await _supabase.from(tabela).delete().eq('id', id);
+                if(error) alert("Erro ao deletar: " + error.message);
+                else carregarDados();
+            }
         }
 
         function renderCharts(vendas, despesas) {
